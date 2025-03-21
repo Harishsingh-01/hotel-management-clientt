@@ -6,15 +6,33 @@ const cors = require("cors");
 dotenv.config();
 const app = express();
 
+
+
+const allowedOrigins = [
+  "https://hotel-management-clientt-git-main-harishsingh-01s-projects.vercel.app",
+  "https://hotel-management-clientt-neon.vercel.app", // Add any other deployed frontend URLs
+  "https://hotel-management-clientt-harishsingh-01s-projects.vercel.app",
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Allow credentials like cookies
+  methods: "GET,POST,PUT,DELETE", // Allow specific HTTP methods
+  allowedHeaders: "Content-Type,Authorization", // Allow specific headers
+}));
+
 // Middleware
-app.use(cors());
+
 app.use(express.json());
 app.use((req, res, next) => {
-  console.log(`Incoming Request: ${req.method} ${req.url}`);
-  next();
+   next();
 });
-
-
 
 const roomRoutes = require("./routes/roomRoutes");
 app.use("/api/", roomRoutes);

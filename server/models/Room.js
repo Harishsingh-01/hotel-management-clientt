@@ -16,10 +16,8 @@ RoomSchema.post("findOneAndUpdate", async function (doc) {
   if (doc && doc.available === true) {
     try {
       await Booking.deleteOne({ roomId: doc._id });
-      console.log(`Booking for room ${doc._id} deleted successfully.`);
-    } catch (error) {
-      console.error("Error deleting booking:", error);
-    }
+     } catch (error) {
+     }
   }
 });
 

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "axios";
+import API from "../utils/axiosInstance"; // Import the axios instance
+
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -11,8 +13,8 @@ const Payment = ({ price }) => {
     try {
       setLoading(true);
       const stripe = await stripePromise;
-      const { data } = await axios.post(
-        "http://localhost:5000/api/payments/create-checkout-session",
+      const { data } = await API.post(
+        "/api/payments/create-checkout-session",
         { price }
       );
 

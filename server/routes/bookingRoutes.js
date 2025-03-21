@@ -51,11 +51,9 @@ const router = express.Router();
 
 // 📌 Get all bookings for a logged-in user (Protected Route)
   router.get("/userbookings", verifyToken, async (req, res) => {
-      console.log("🔹 API Hit: /api/user (Bookings Route)"); // ✅ Confirm API is being called
-
+ 
     try {
-      console.log("Authorization Header:", req.header("Authorization")); // Debugging token
-      console.log("User ID from token:", req.user.id); // Debugging userId
+      
       const userId = req.user?.id; // Ensure userId is extracted correctly
 
       
@@ -90,6 +88,43 @@ const router = express.Router();
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+// // ✅ Handle Payment Success from Stripe success_url
+// router.get("/successs", async (req, res) => {
+//   try {
+//     const { roomId, userId, checkIn, checkOut, totalPrice } = req.query;
+
+//     if (!roomId || !userId || !checkIn || !checkOut || !totalPrice) {
+//       return res.status(400).json({ error: "Missing booking details" });
+//     }
+
+//     console.log("📤 Processing booking:", { roomId, userId, checkIn, checkOut, totalPrice });
+
+//     // 🔹 Check if room exists
+//     const room = await Room.findById(roomId);
+//     if (!room || !room.available) {
+//       return res.status(400).json({ message: "Room is not available." });
+//     }
+
+//     // 🔹 Save booking in database
+//     const booking = new Booking({ userId, roomId, checkIn, checkOut, totalPrice });
+//     await booking.save();
+
+//     // 🔹 Mark room as unavailable
+//     room.available = false;
+//     await room.save();
+
+//     console.log("✅ Booking confirmed:", booking);
+
+//     // 🔹 Redirect user to frontend booking success page
+//     res.redirect(`http://localhost:3000/success?roomId=${roomId}&userId=${userId}`);
+//   } catch (error) {
+//     console.error("❌ Booking Error:", error);
+//     res.status(500).json({ error: "Booking failed!" });
+//   }
+// });
+
 
 
 module.exports = router;

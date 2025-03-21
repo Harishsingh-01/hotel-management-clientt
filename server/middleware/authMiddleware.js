@@ -11,8 +11,7 @@ const verifyToken = (req, res, next) => {
     const verified = jwt.verify(token, process.env.JWT_SECRET); // Verify token
     req.user = verified; // Attach user data to request
 
-    console.log("Decoded JWT:", verified); // ✅ Debugging: Check the decoded token structure
-
+ 
     if (!req.user || (!req.user.id && !req.user.userId)) {
       return res.status(401).json({ message: "Invalid token. User ID missing." });
     }

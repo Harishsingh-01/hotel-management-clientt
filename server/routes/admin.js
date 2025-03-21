@@ -10,13 +10,10 @@ const router = express.Router();
 
 // ✅ create a rooms (Admin)
 router.post("/addrooms", verifyToken, adminMiddleware, async (req, res) => {
-  console.log("Received Data:"+ req.body);
-    console.log("User in req:", req.user); // Should come from verifyToken
-    console.log("✅ Room Add Route Hit");
+  
 
     try {
-        console.log("Request Body:", req.body);
-
+ 
         const newRoom = new Room(req.body);
         await newRoom.save();
 
@@ -32,8 +29,7 @@ router.post("/addrooms", verifyToken, adminMiddleware, async (req, res) => {
 // ✅ Update Room Details (Only for Admins)
 router.put("/update/:roomId", verifyToken, adminMiddleware, async (req, res) => {
   try {
-      console.log("Received update request for:", req.params.roomId);
-      console.log("Update Data:", req.body);
+     
 
       const updatedRoom = await Room.findByIdAndUpdate(
           req.params.roomId,

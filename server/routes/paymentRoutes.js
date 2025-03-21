@@ -5,6 +5,20 @@ const Booking = require("../models/Booking"); // Import Booking model
 const router = express.Router();
 const mongoose = require("mongoose"); // Import Mongoose for transactions
 
+// Helper function to handle retries
+const executeWithRetry = async (operation, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error.code === 112 && attempt < maxRetries) { // WriteConflict error
+        await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Exponential backoff
+        continue;
+      }
+      throw error;
+    }
+  }
+};
 
 // Step 1: Create Checkout Session & Handle Payment
 router.post("/create-checkout-session", async (req, res) => {
@@ -28,11 +42,9 @@ router.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:3000/success?roomId=${roomId}&userId=${userId}&checkIn=${checkIn}&checkOut=${checkOut}&totalPrice=${price}`,
-      cancel_url: "http://localhost:3000/cancel",
+      success_url: `https://hotel-management-clientt-git-main-harishsingh-01s-projects.vercel.app/success?roomId=${roomId}&userId=${userId}&checkIn=${checkIn}&checkOut=${checkOut}&totalPrice=${price}`,
     });
-    console.log("testing1");
-    
+     
 
     res.json({ sessionId: session.id });
   } catch (error) {
@@ -43,50 +55,101 @@ router.post("/create-checkout-session", async (req, res) => {
 
 // Step 2: Confirm Booking After Payment Success
 router.post("/confirm-booking", async (req, res) => {
-  console.log("Booking attempt...");
-
-  const session = await mongoose.startSession(); // Start DB transaction
-  session.startTransaction();
+  let session = null;
 
   try {
     const { roomId, userId, checkIn, checkOut, totalPrice } = req.body;
+
+    // Validate input
     if (!roomId || !userId || !checkIn || !checkOut || !totalPrice) {
       return res.status(400).json({ error: "Missing booking details" });
     }
 
-    // 🔹 Check for duplicate booking
-    const existingBooking = await Booking.findOne({ userId, roomId, checkIn, checkOut }).session(session);
+    // Check for existing bookings without transaction
+    const existingBooking = await Booking.findOne({
+      roomId,
+      $or: [
+        {
+          checkIn: { $lte: new Date(checkOut) },
+          checkOut: { $gte: new Date(checkIn) }
+        }
+      ],
+      status: { $ne: 'cancelled' }
+    });
+
     if (existingBooking) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: "You have already booked this room." });
+      return res.status(400).json({ error: "Room is already booked for these dates" });
     }
 
-    // 🔹 Check if room is available
-    const room = await Room.findById(roomId).session(session);
+    // Check room availability
+    const room = await Room.findById(roomId);
     if (!room || !room.available) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: "Room is not available." });
+      return res.status(400).json({ error: "Room is not available" });
     }
 
-    // 🔹 Save booking
-    const booking = new Booking({ userId, roomId, checkIn, checkOut, totalPrice });
-    await booking.save({ session });
+    // Create booking
+    const booking = new Booking({
+      userId,
+      roomId,
+      checkIn: new Date(checkIn),
+      checkOut: new Date(checkOut),
+      totalPrice,
+      status: 'booked'
+    });
 
-    // 🔹 Mark room as unavailable
+    // Save booking
+    await booking.save();
+
+    // Update room availability
     room.available = false;
-    await room.save({ session });
+    await room.save();
 
-    await session.commitTransaction();
-    session.endSession();
+    res.status(200).json({
+      success: true,
+      message: "Booking confirmed successfully!",
+      bookingId: booking._id
+    });
 
-    res.json({ message: "Booking confirmed successfully!" });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     console.error("Booking Error:", error);
-    res.status(500).json({ error: "Booking failed!" });
+
+    // If session exists, abort transaction
+    if (session) {
+      try {
+        await session.abortTransaction();
+        session.endSession();
+      } catch (sessionError) {
+        console.error("Session abort error:", sessionError);
+      }
+    }
+
+    // Handle specific error cases
+    if (error.code === 251) {
+      return res.status(500).json({
+        error: "Booking system temporarily unavailable. Please try again."
+      });
+    }
+
+    // Handle duplicate booking error
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: "This room is already booked for the selected dates"
+      });
+    }
+
+    res.status(500).json({
+      error: "Unable to complete booking. Please try again.",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    // Ensure session is ended if it exists
+    if (session) {
+      try {
+        session.endSession();
+      } catch (error) {
+        console.error("Session end error:", error);
+      }
+    }
   }
 });
 

@@ -29,7 +29,6 @@ const App = () => {
     const updateRoomAvailability = async () => {
       try {
         await axios.post("http://localhost:5000/api/bookings/update-status");
-        console.log("Room availability updated successfully");
       } catch (error) {
         console.error("Error updating room status:", error.response?.data || error.message);
       }

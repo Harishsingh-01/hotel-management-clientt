@@ -18,19 +18,15 @@ router.get("/rooms", async (req, res) => {
 // Get a single room by ID (with availability check)
 router.get("/rooms/:id", async (req, res) => {
   try {
-    console.log("📩 Received request for room:", req.params.id); // Debugging
-    const room = await Room.findById(req.params.id);
+     const room = await Room.findById(req.params.id);
     
     if (!room) {
-      console.log("⚠️ Room not found!");
-      return res.status(404).json({ message: "Room not found" });
+       return res.status(404).json({ message: "Room not found" });
     }
 
-    console.log("✅ Sending Room Data:", room); // Debugging
-    res.json(room);
+     res.json(room);
   } catch (error) {
-    console.error("❌ Error fetching room:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -56,15 +52,42 @@ router.post("/update-availability", async (req, res) => {
 });
 
 // Update a room (Admin Only)
-router.put("/rooms/:id", async (req, res) => {
+router.put("/admin/update/:id", async (req, res) => {
   try {
-    const room = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.status(200).json({ message: "Room updated", room });
+    const { id } = req.params;
+    const updateData = {
+      name: req.body.name,
+      type: req.body.type,
+      price: Number(req.body.price),
+      amenities: req.body.amenities,
+      description: req.body.description,
+      image: req.body.image,
+      available: req.body.available
+    };
+
+    const room = await Room.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Room updated successfully", 
+      room 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error updating room", error });
+    res.status(500).json({ 
+      success: false,
+      message: "Error updating room", 
+      error: error.message 
+    });
   }
 });
-
 // Delete a room (Admin Only)
 router.delete("/rooms/:id", async (req, res) => {
   try {
