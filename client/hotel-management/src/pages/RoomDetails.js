@@ -5,7 +5,7 @@ import roomImage from "./download.jpg";
 import { 
   Calendar, DollarSign, Users, Home, Coffee, Wifi, Star, MapPin, 
   ChevronLeft, Loader, Tv, Wind, Utensils, Bath, 
-  Music, Phone, Lock
+  Music, Phone, Lock, ThumbsUp
 } from "lucide-react";
 import API from "../utils/axiosInstance"; // Import the axios instance
 
@@ -17,6 +17,7 @@ const RoomDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviews, setReviews] = useState([]);
 
   // Amenity icon mapping
   const amenityIcons = {
@@ -37,11 +38,21 @@ const RoomDetails = () => {
       try {
         setLoading(true);
         const response = await API.get(
-          `/api/rooms/${roomId}`, 
-          { withCredentials: true }
+          `/api/rooms/${roomId}`
         );
+        console.log('Room details response:', response.data); // Debug log
+
         setRoom(response.data);
+        if (response.data.reviews && Array.isArray(response.data.reviews)) {
+          console.log('Setting reviews:', response.data.reviews); // Debug log
+          setReviews(response.data.reviews);
+          console.log("sdsd");
+        } else {
+          console.log('No reviews found, setting empty array'); // Debug log
+          setReviews([]);
+        }
       } catch (err) {
+        console.error('Error fetching room details:', err);
         setError("Failed to load room details: " + err.message);
       } finally {
         setLoading(false);
@@ -79,6 +90,102 @@ const RoomDetails = () => {
 
   // Mock data for demonstration
   const mockImages = [roomImage, roomImage, roomImage];
+
+  const RatingBreakdown = ({ reviews }) => {
+    if (!reviews || !Array.isArray(reviews)) {
+      return null;
+    }
+
+    // Initialize rating counts array (index 0 = 1 star, index 4 = 5 stars)
+    const ratingCounts = Array(5).fill(0);
+
+    // Count ratings
+    reviews.forEach(review => {
+      if (review && review.rating && review.rating >= 1 && review.rating <= 5) {
+        // Subtract 1 from rating to get correct array index (5 star rating goes to index 4)
+        ratingCounts[review.rating - 1]++;
+      }
+    });
+
+    console.log('Rating counts:', ratingCounts); // Debug log
+
+    const totalReviews = reviews.length;
+    console.log('Total reviews:', totalReviews); // Debug log
+
+    return (
+      <div className="mt-6 space-y-4">
+        <h3 className="text-lg font-semibold">Rating Breakdown</h3>
+        {/* Display bars from 5 stars to 1 star */}
+        {[5, 4, 3, 2, 1].map((stars) => {
+          const count = ratingCounts[stars - 1];
+          const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+          
+          console.log(`${stars} stars:`, { count, percentage }); // Debug log
+
+          return (
+            <div key={stars} className="flex items-center space-x-2">
+              <span className="w-20 text-sm text-gray-600">{stars} stars</span>
+              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-yellow-400 rounded-full"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <span className="w-12 text-sm text-gray-600">{count}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const ReviewList = ({ reviews }) => {
+    console.log('ReviewList received reviews:', reviews); // Debug log
+    
+    if (!reviews || !Array.isArray(reviews) || reviews.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No reviews yet</p>
+          <p className="text-sm text-gray-400 mt-2">Be the first to review this room!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-8 space-y-6">
+        <h3 className="text-lg font-semibold">Recent Reviews</h3>
+        {reviews.map((review) => (
+          <div key={review._id} className="border-b pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  {review.userId?.name?.charAt(0) || 'U'}
+                </div>
+                <span className="font-medium">
+                  {review.userId?.name || 'Anonymous User'}
+                </span>
+              </div>
+              <div className="flex items-center">
+                {[...Array(5)].map((_, index) => (
+                  <Star
+                    key={index}
+                    className={`h-4 w-4 ${
+                      index < review.rating ? 'text-yellow-400' : 'text-gray-300'
+                    }`}
+                    fill="currentColor"
+                  />
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 text-gray-600">{review.review}</p>
+            <p className="mt-1 text-sm text-gray-500">
+              {new Date(review.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -186,6 +293,37 @@ const RoomDetails = () => {
               </div>
             )}
 
+            {/* Reviews Section */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex items-center">
+                  <Star className="h-8 w-8 text-yellow-400" fill="currentColor" />
+                  <span className="ml-2 text-3xl font-bold">
+                    {room.averageRating > 0 ? Number(room.averageRating).toFixed(1) : 'N/A'}
+                  </span>
+                </div>
+                <div className="text-gray-500">
+                  <span className="font-medium">{room.reviewCount || 0}</span> reviews
+                </div>
+              </div>
+
+              {reviews && reviews.length > 0 ? (
+                <>
+                  <div className="mb-8">
+                    <RatingBreakdown reviews={reviews} />
+                  </div>
+                  <div className="border-t pt-6">
+                    <ReviewList reviews={reviews} />
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No reviews yet</p>
+                  <p className="text-sm text-gray-400 mt-2">Be the first to review this room!</p>
+                </div>
+              )}
+            </div>
+
             {/* House Rules */}
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h2 className="text-xl font-semibold mb-4">House Rules</h2>
@@ -222,13 +360,13 @@ const RoomDetails = () => {
                     <span>₹{room.price + Math.floor(room.price * 0.1)}</span>
                   </div>
                 </div>
-      <button
-        onClick={() => navigate(`/bookroom/${roomId}`)}
+                <button
+                  onClick={() => navigate(`/bookroom/${roomId}`)}
                   className="w-full flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
-      >
+                >
                   <Calendar className="h-5 w-5 mr-2" />
-        Book Now
-      </button>
+                  Book Now
+                </button>
               </div>
             </div>
           </div>

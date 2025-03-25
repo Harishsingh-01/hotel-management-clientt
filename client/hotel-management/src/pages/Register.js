@@ -18,7 +18,7 @@ const Register = () => {
 
     const handleSendOtp = async () => {
         if (!email) {
-            setResponse({ type: "error", message: "Please enter your email address" });
+            setResponse({ type: "error", message: "Please enter your email address (Check SPAM mail also)" });
             return;
         }
         setLoading(true);

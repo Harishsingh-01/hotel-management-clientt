@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { isAuthenticated, logout } from "../utils/auth";
 import { jwtDecode } from "jwt-decode";
-import { Menu, X, Hotel, User, Book, Plus, Users, LayoutDashboard } from "lucide-react"; // Changed Dashboard to LayoutDashboard
+import { 
+  Menu, X, Hotel, User, Book, Plus, Users, LayoutDashboard, Mail 
+} from "lucide-react";
 
 const Navbar = () => {
   const [userRole, setUserRole] = useState(null);
@@ -69,17 +71,34 @@ const Navbar = () => {
               </Link>
 
               {isAuthenticated("user") && (
-                <Link to="/bookings" className="nav-link group relative">
-                  <span className="flex items-center space-x-1">
-                    <Book className="w-4 h-4" />
-                    <span>My Bookings</span>
-                  </span>
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                </Link>
+                <>
+                  <Link to="/bookings" className="nav-link group relative">
+                    <span className="flex items-center space-x-1">
+                      <Book className="w-4 h-4" />
+                      <span>My Bookings</span>
+                    </span>
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </Link>
+                  
+                  <Link to="/contact" className="nav-link group relative">
+                    <span className="flex items-center space-x-1">
+                      <Mail className="w-4 h-4" />
+                      <span>Contact Us</span>
+                    </span>
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </Link>
+                </>
               )}
 
               {isAuthenticated("admin") && (
                 <div className="flex items-center space-x-6">
+                  <Link to="/admin/contacts" className="nav-link group relative">
+                    <span className="flex items-center space-x-1">
+                      <Mail className="w-4 h-4" />
+                      <span>Contact Us</span>
+                    </span>
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </Link>
                   <Link to="/addroom" className="nav-link group relative">
                     <span className="flex items-center space-x-1">
                       <Plus className="w-4 h-4" />
@@ -185,13 +204,26 @@ const Navbar = () => {
             </Link>
 
             {isAuthenticated("user") && (
-              <Link 
-                to="/bookings" 
-                className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
-                onClick={() => setMenuOpen(false)}
-              >
-                My Bookings
-              </Link>
+              <>
+                <Link 
+                  to="/bookings" 
+                  className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  My Bookings
+                </Link>
+                
+                <Link 
+                  to="/contact" 
+                  className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span className="flex items-center space-x-2">
+                    <Mail className="w-4 h-4" />
+                    <span>Contact Us</span>
+                  </span>
+                </Link>
+              </>
             )}
 
             {isAuthenticated("admin") && (

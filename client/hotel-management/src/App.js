@@ -19,6 +19,9 @@ import UpdateRoom from "./pages/UpdateRoom";
 import AdminBookedRooms from "./pages/AdminBookedRooms"
 import UsersData from "./pages/UsersData";
 import { isTokenExpired } from "./utils/auth";
+import Review from './pages/Review';
+import ContactUs from './pages/ContactUs';
+import AdminContacts from './pages/AdminContacts';  
 
 
 
@@ -61,6 +64,9 @@ const App = () => {
         <Route path="/admin/update/:roomId" element={<UpdateRoom />} />
         <Route path="/admin/bookedrooms" element={<AdminBookedRooms />} />
         <Route path="/admin/Usersdata" element={<UsersData />} />
+        <Route path="/review/:bookingId" element={<Review />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/admin/contacts" element={<AdminContacts />} />
 
 
       </Routes>

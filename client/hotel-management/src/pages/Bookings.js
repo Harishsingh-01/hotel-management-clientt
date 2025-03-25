@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import API from "../utils/axiosInstance";
-import { Calendar, Clock, DollarSign, Hotel, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, Hotel, CheckCircle, XCircle, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import API from "../utils/axiosInstance"; // Import the axios instance
 
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return;
@@ -124,8 +127,8 @@ const Bookings = () => {
                     </div>
                   </div>
 
-                  {/* Status */}
-                  <div className="pt-4 border-t">
+                  {/* Status and Review Button */}
+                  <div className="pt-4 border-t space-y-3">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                       {booking.status === 'confirmed' ? (
                         <CheckCircle className="w-4 h-4 mr-1" />
@@ -134,6 +137,14 @@ const Bookings = () => {
                       )}
                       {booking.status || "N/A"}
                     </span>
+                    
+                    <button
+                      onClick={() => navigate(`/review/${booking._id}`)}
+                      className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Add Review & Rating
+                    </button>
                   </div>
                 </div>
               </div>

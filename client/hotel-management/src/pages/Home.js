@@ -6,7 +6,7 @@ import backgroundImage from "./vojtech-bruzek-Yrxr3bsPdS0-unsplash.jpg";
 import API from "../utils/axiosInstance"; // Import the axios instance
 
 
-import { Star, Wifi, Coffee, Utensils, Map, Phone, Clock, Search, ArrowRight } from 'lucide-react';
+import { Star, Wifi, Coffee, Utensils, Map, Phone, Clock, Search, ArrowRight, Users } from 'lucide-react';
 
 const Home = () => {
   const [rooms, setRooms] = useState([]);
@@ -30,6 +30,28 @@ const Home = () => {
     room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     room.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const RatingDisplay = ({ rating, reviewCount }) => {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="flex items-center">
+          <Star
+            className={`h-5 w-5 ${rating > 0 ? 'text-yellow-400' : 'text-gray-300'}`}
+            fill="currentColor"
+          />
+          <span className="ml-1 text-sm font-medium text-gray-700">
+            {rating > 0 ? rating.toFixed(1) : 'No ratings'}
+          </span>
+        </div>
+        {reviewCount > 0 && (
+          <div className="flex items-center text-gray-500">
+            <Users className="h-4 w-4" />
+            <span className="ml-1 text-sm">({reviewCount})</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -155,10 +177,10 @@ const Home = () => {
                     <h3 className="text-xl font-bold text-gray-800 group-hover:text-green-600 transition-colors duration-300">
                       {room.name}
                     </h3>
-                    {/* <div className="flex items-center">
-                      <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                      <span className="ml-1 text-gray-600">4.8</span>
-                    </div> */}
+                    <RatingDisplay 
+                      rating={room.averageRating} 
+                      reviewCount={room.reviewCount} 
+                    />
                   </div>
 
                   <div className="flex items-center justify-between mb-4">
