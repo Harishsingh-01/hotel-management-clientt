@@ -7,8 +7,6 @@ import { Calendar, DollarSign, Clock, Hotel, CreditCard, AlertCircle } from "luc
 import API from "../utils/axiosInstance"; 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
-
-
 const BookRoom = () => {
   const { roomId } = useParams();
   const [userId, setUserId] = useState(null);
@@ -16,7 +14,7 @@ const BookRoom = () => {
   const [checkOut, setCheckOut] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(null);
-  const [pricePerMonth, setPricePerMonth] = useState(null);
+  const [pricePerNight, setPricePerNight] = useState(null);  // Change to price per night
   const [isAvailable, setIsAvailable] = useState(true);
   const [roomDetails, setRoomDetails] = useState(null);
 
@@ -36,7 +34,7 @@ const BookRoom = () => {
     const fetchRoomDetails = async () => {
       try {
         const res = await API.get(`/api/rooms/${roomId}`);
-        setPricePerMonth(res.data.price);
+        setPricePerNight(res.data.price);  // Change to price per night
         setIsAvailable(res.data.available);
         setRoomDetails(res.data);
       } catch (error) {
@@ -47,23 +45,28 @@ const BookRoom = () => {
   }, [roomId]);
 
   useEffect(() => {
-    if (checkIn && checkOut && pricePerMonth !== null) {
+    if (checkIn && checkOut && pricePerNight !== null) {
       const startDate = new Date(checkIn);
       const endDate = new Date(checkOut);
+
       if (startDate >= endDate) {
         setTotalPrice(0);
         return;
       }
 
-      // Calculate months difference
-      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                        (endDate.getMonth() - startDate.getMonth());
-      
-      // If there's a partial month, round up to next month
-      const totalMonths = monthsDiff === 0 ? 1 : monthsDiff;
-      setTotalPrice(totalMonths * pricePerMonth);
+      // Calculate nights difference
+      const timeDifference = endDate - startDate;
+      const daysDifference = timeDifference / (1000 * 3600 * 24); // Convert milliseconds to days
+
+      if (daysDifference < 1) {
+        setTotalPrice(0); // If the stay is less than 1 day, set total price to 0
+        return;
+      }
+
+      // Set the total price
+      setTotalPrice(daysDifference * pricePerNight);
     }
-  }, [checkIn, checkOut, pricePerMonth]);
+  }, [checkIn, checkOut, pricePerNight]);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -79,7 +82,7 @@ const BookRoom = () => {
       alert("Please select valid dates.");
       return;
     }
-  
+
     setLoading(true);
     try {
       const paymentResponse = await API.post("/api/payments/create-checkout-session", {
@@ -89,12 +92,12 @@ const BookRoom = () => {
         checkIn,
         checkOut
       });
-  
+
       const stripe = await stripePromise;
       const { error } = await stripe.redirectToCheckout({ 
         sessionId: paymentResponse.data.sessionId 
       });
-  
+
       if (error) throw new Error(error.message);
     } catch (error) {
       alert(error.response?.data?.message || "Payment failed! Try again.");
@@ -127,7 +130,7 @@ const BookRoom = () => {
               <h3 className="text-xl font-bold">{roomDetails.name}</h3>
               <p className="flex items-center mt-2">
                 <DollarSign className="h-5 w-5 mr-1" />
-                ₹{pricePerMonth} per Month
+                ₹{pricePerNight} per Night  {/* Updated to per Night */}
               </p>
             </div>
           )}
@@ -155,7 +158,7 @@ const BookRoom = () => {
                         <Calendar className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="month"
+                        type="date"
                         value={checkIn}
                         onChange={(e) => setCheckIn(e.target.value)}
                         required
@@ -175,7 +178,7 @@ const BookRoom = () => {
                         <Calendar className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="month"
+                        type="date"
                         value={checkOut}
                         onChange={(e) => setCheckOut(e.target.value)}
                         required
@@ -191,13 +194,13 @@ const BookRoom = () => {
                   <h4 className="text-lg font-medium text-gray-900 mb-4">Price Summary</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-gray-600">
-                      <span>Price per Month</span>
-                      <span>₹{pricePerMonth || 0}</span>
+                      <span>Price per Night</span>
+                      <span>₹{pricePerNight || 0}</span>
                     </div>
                     {totalPrice > 0 && (
                       <div className="flex justify-between text-gray-600">
-                        <span>Number of Months</span>
-                        <span>{Math.ceil(totalPrice / pricePerMonth)}</span>
+                        <span>Number of Nights</span>
+                        <span>{Math.ceil(totalPrice / pricePerNight)}</span>
                       </div>
                     )}
                     <div className="pt-4 mt-4 border-t border-gray-200">
@@ -209,32 +212,20 @@ const BookRoom = () => {
                       </div>
                     </div>
                   </div>
-          </div>
+                </div>
 
-                {/* Submit Button */}
+                {/* Booking Button */}
                 <button
                   type="submit"
-                  disabled={loading || totalPrice <= 0}
-                  className={`w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-lg text-lg font-medium text-white 
-                    ${loading || totalPrice <= 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    } transition-colors duration-300`}
+                  disabled={loading || !checkIn || !checkOut || totalPrice <= 0 || !isAvailable}
+                  className={`w-full py-3 mt-6 bg-green-500 text-white font-semibold rounded-lg shadow-md focus:ring-2 focus:ring-green-400 ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Pay ₹{totalPrice !== null ? totalPrice : ""}
-                    </>
-                  )}
-          </button>
-        </form>
-      )}
+                  {loading ? "Processing..." : "Book Now"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
