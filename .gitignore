@@ -1,7 +1,11 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # Node Modules
 node_modules/
 client/hotel-management/node_modules/
 server/node_modules/
+/.pnp
+.pnp.js
 
 # Build Files
 client/hotel-management/.next/  # If using Next.js
@@ -19,6 +23,12 @@ server/.env
 client/.env
 client/hotel-management/.env
 client/hotel-management/.env.local
+/.env
+env/
+/.env/
+
+# Testing
+/coverage
 
 # OS-Specific Files
 .DS_Store
