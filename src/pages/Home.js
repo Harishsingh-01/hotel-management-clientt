@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import roomImage from "./download.jpg";
-import backgroundImage from "./vojtech-bruzek-Yrxr3bsPdS0-unsplash.jpg";
+import backgroundImage from "./images.jpg";
 import API from "../utils/axiosInstance";
 
 
@@ -66,10 +66,12 @@ const Home = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <div className="max-w-4xl space-y-6">
             <h1 className="text-4xl md:text-7xl font-bold text-white mb-4 animate-fade-up">
-              Experience Budget Friendly Living
+            Experience Luxury Living
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 mb-8 animate-fade-up delay-200">
-Get a Home Away From your Home              
+            Discover comfort, elegance, and unforgettable moments
+
+             
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-300">
               <Link
