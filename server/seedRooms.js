@@ -50,7 +50,6 @@ const rooms = [
 
 const seedDB = async () => {
   await Room.insertMany(rooms);
-  console.log("Rooms added successfully!");
   mongoose.connection.close();
 };
 

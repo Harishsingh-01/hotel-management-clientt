@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from "lucide-react";
-import API from "../utils/axiosInstance"; // Import the axios instance
+import API from "../utils/axiosInstance";
 
 
 const Register = () => {
@@ -49,6 +49,14 @@ const Register = () => {
             setResponse({ type: "error", message: "Invalid or expired OTP. Try again!" });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNameChange = (e) => {
+        const value = e.target.value;
+        // Only allow letters and spaces
+        if (value === '' || /^[A-Za-z\s]+$/.test(value)) {
+            setName(value);
         }
     };
 
@@ -101,10 +109,10 @@ const Register = () => {
                                 <input
                                     type="text"
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={handleNameChange}
                                     required
                                     className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-                                    placeholder="Enter your full name"
+                                    placeholder="Enter your full name (letters only)"
                                 />
                             </div>
                         </div>

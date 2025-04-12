@@ -45,7 +45,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <Hotel className={`w-8 h-8 ${scrolled ? "text-green-600" : "text-white"}`} />
-              <span className="text-xl font-bold">Luxury Hotel</span>
+              <span className="text-xl font-bold">testing</span>
             </Link>
 
             {/* Desktop Navigation */}

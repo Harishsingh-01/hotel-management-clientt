@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { loadStripe } from "@stripe/stripe-js";
 import { Calendar, DollarSign, Clock, Hotel, CreditCard, AlertCircle } from "lucide-react";
-import API from "../utils/axiosInstance"; // Import the axios instance
+import API from "../utils/axiosInstance"; 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 
@@ -16,7 +16,7 @@ const BookRoom = () => {
   const [checkOut, setCheckOut] = useState("");
   const [loading, setLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(null);
-  const [pricePerNight, setPricePerNight] = useState(null);
+  const [pricePerMonth, setPricePerMonth] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
   const [roomDetails, setRoomDetails] = useState(null);
 
@@ -36,7 +36,7 @@ const BookRoom = () => {
     const fetchRoomDetails = async () => {
       try {
         const res = await API.get(`/api/rooms/${roomId}`);
-        setPricePerNight(res.data.price);
+        setPricePerMonth(res.data.price);
         setIsAvailable(res.data.available);
         setRoomDetails(res.data);
       } catch (error) {
@@ -47,17 +47,23 @@ const BookRoom = () => {
   }, [roomId]);
 
   useEffect(() => {
-    if (checkIn && checkOut && pricePerNight !== null) {
+    if (checkIn && checkOut && pricePerMonth !== null) {
       const startDate = new Date(checkIn);
       const endDate = new Date(checkOut);
       if (startDate >= endDate) {
         setTotalPrice(0);
         return;
       }
-      const nights = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-      setTotalPrice(nights * pricePerNight);
+
+      // Calculate months difference
+      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                        (endDate.getMonth() - startDate.getMonth());
+      
+      // If there's a partial month, round up to next month
+      const totalMonths = monthsDiff === 0 ? 1 : monthsDiff;
+      setTotalPrice(totalMonths * pricePerMonth);
     }
-  }, [checkIn, checkOut, pricePerNight]);
+  }, [checkIn, checkOut, pricePerMonth]);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -121,7 +127,7 @@ const BookRoom = () => {
               <h3 className="text-xl font-bold">{roomDetails.name}</h3>
               <p className="flex items-center mt-2">
                 <DollarSign className="h-5 w-5 mr-1" />
-                ₹{pricePerNight} per night
+                ₹{pricePerMonth} per Month
               </p>
             </div>
           )}
@@ -149,7 +155,7 @@ const BookRoom = () => {
                         <Calendar className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="date"
+                        type="month"
                         value={checkIn}
                         onChange={(e) => setCheckIn(e.target.value)}
                         required
@@ -169,7 +175,7 @@ const BookRoom = () => {
                         <Calendar className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="date"
+                        type="month"
                         value={checkOut}
                         onChange={(e) => setCheckOut(e.target.value)}
                         required
@@ -185,13 +191,13 @@ const BookRoom = () => {
                   <h4 className="text-lg font-medium text-gray-900 mb-4">Price Summary</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-gray-600">
-                      <span>Price per night</span>
-                      <span>₹{pricePerNight || 0}</span>
+                      <span>Price per Month</span>
+                      <span>₹{pricePerMonth || 0}</span>
                     </div>
                     {totalPrice > 0 && (
                       <div className="flex justify-between text-gray-600">
-                        <span>Number of nights</span>
-                        <span>{Math.ceil(totalPrice / pricePerNight)}</span>
+                        <span>Number of Months</span>
+                        <span>{Math.ceil(totalPrice / pricePerMonth)}</span>
                       </div>
                     )}
                     <div className="pt-4 mt-4 border-t border-gray-200">

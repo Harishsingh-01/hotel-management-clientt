@@ -7,13 +7,13 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Bookings from "./pages/Bookings";
 import AvailableRooms from "./pages/AvailableRooms";
-import Payment from "./pages/payment";
+// import Payment from "./pages/payment";
 import BookRoom from "./pages/BookRoom";
 import AddRoom from "./pages/AddRoom";
 import RoomDetails from "./pages/RoomDetails";
 import Success from "./pages/Success";
-import Navbar from "./pages/Navbar"; // Add a Navbar component
-import { isAuthenticated } from "./utils/auth"; // Helper function for authentication
+import Navbar from "./pages/Navbar";
+import { isAuthenticated } from "./utils/auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import UpdateRoom from "./pages/UpdateRoom";
 import AdminBookedRooms from "./pages/AdminBookedRooms"
@@ -23,28 +23,7 @@ import Review from './pages/Review';
 import ContactUs from './pages/ContactUs';
 import AdminContacts from './pages/AdminContacts';  
 
-
-
-
-
 const App = () => {
-  useEffect(() => {
-    const updateRoomAvailability = async () => {
-      try {
-        await axios.post("http://localhost:5000/api/bookings/update-status");
-      } catch (error) {
-        console.error("Error updating room status:", error.response?.data || error.message);
-      }
-    };
-  
-    updateRoomAvailability(); // Run on page load
-  
-    // Check every 5 minutes (300,000 ms)
-    const interval = setInterval(updateRoomAvailability, 300000);
-  
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
- 
   return (
     <Router>
       <Navbar />
@@ -58,7 +37,7 @@ const App = () => {
         <Route path="/Bookroom/:roomId" element={<ProtectedRoute><BookRoom /></ProtectedRoute>} />
         <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
         <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
-        <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
+        {/* <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} /> */}
         <Route path="/addroom" element={<AdminRoute><AddRoom /></AdminRoute>} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/update/:roomId" element={<UpdateRoom />} />
@@ -67,33 +46,30 @@ const App = () => {
         <Route path="/review/:bookingId" element={<Review />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/admin/contacts" element={<AdminContacts />} />
-
-
       </Routes>
     </Router>
   );
 };
 
 const AuthChecker = () => {
-  const location = useLocation(); // Get current page URL
+  const location = useLocation();
   const token=localStorage.getItem("token");
 
   useEffect(() => {
     if (token && isTokenExpired()) {
       alert("token expired");
       localStorage.removeItem("token");
-      window.location.href = "/login"; // ✅ Redirect without `useNavigate`
+      window.location.href = "/login";
     }
-  }, [location.pathname]); // Runs every time the user navigates
+  }, [location.pathname]);
 
-  return null; // This component does not render anything
+  return null;
 };
 
 const ProtectedRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
 };
 
-// Protected Route for Admin Users
 const AdminRoute = ({ children }) => {
   return isAuthenticated("admin") ? children : <Navigate to="/login" />;
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, Loader } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import API from "../utils/axiosInstance"; // Import the axios instance
+import API from "../utils/axiosInstance"; 
 
 
 const ContactUs = () => {
@@ -71,7 +71,6 @@ const ContactUs = () => {
         message: formData.message
       };
 
-      console.log('Submitting form data:', contactData);
 
       const token = localStorage.getItem('token');
       const response = await API.post(

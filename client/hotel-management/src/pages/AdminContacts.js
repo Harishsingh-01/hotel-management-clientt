@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import API from "../utils/axiosInstance";
 
 const AdminContacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -9,28 +10,22 @@ const AdminContacts = () => {
     const fetchContacts = async () => {
       try {
         const token = localStorage.getItem("token"); // Get token from localStorage
-        const response = await fetch("http://localhost:5000/api/contact/contacts", {
-          method: "GET",
+        const response = await API.get("/api/contact/contacts", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `${token}`,
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch contacts. Make sure you are an admin.");
-        }
-
-        const data = await response.json();
-        setContacts(data);
+        setContacts(response.data); // Store data in state
       } catch (error) {
-        setError(error.message);
+        setError(error.response ? error.response.data.message : "Failed to fetch contacts. Make sure you are an admin.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchContacts();
+    fetchContacts(); // Call the function inside useEffect
   }, []);
 
   return (
@@ -49,7 +44,6 @@ const AdminContacts = () => {
                 <th className="py-3 px-6 text-left">Email</th>
                 <th className="py-3 px-6 text-left">Subject</th>
                 <th className="py-3 px-6 text-left">Message</th>
-                {/* <th className="py-3 px-6 text-left">Status</th> */}
                 <th className="py-3 px-6 text-left">Date</th>
               </tr>
             </thead>
@@ -60,19 +54,6 @@ const AdminContacts = () => {
                   <td className="py-2 px-6">{contact.email}</td>
                   <td className="py-2 px-6">{contact.subject}</td>
                   <td className="py-2 px-6">{contact.message}</td>
-                  <td className="py-2 px-6">
-                    {/* <span
-                      className={`px-2 py-1 rounded ${
-                        contact.status === "pending"
-                          ? "bg-yellow-500 text-white"
-                          : contact.status === "responded"
-                          ? "bg-blue-500 text-white"
-                          : "bg-green-500 text-white"
-                      }`}
-                    >
-                      {contact.status}
-                    </span> */}
-                  </td>
                   <td className="py-2 px-6">{new Date(contact.createdAt).toLocaleString()}</td>
                 </tr>
               ))}

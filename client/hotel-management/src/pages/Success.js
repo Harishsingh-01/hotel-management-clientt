@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, Loader, Calendar, Mail, AlertCircle, ArrowRight } from "lucide-react";
-import API from "../utils/axiosInstance"; // Import the axios instance
-
+import API from "../utils/axiosInstance";
 
 const SuccessPage = () => {
   const location = useLocation();
@@ -16,11 +15,10 @@ const SuccessPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Prevent multiple booking attempts
     if (bookingAttempted) return;
 
     const confirmBooking = async () => {
-      setBookingAttempted(true); // Mark booking as attempted immediately
+      setBookingAttempted(true);
       
       const params = new URLSearchParams(location.search);
       const roomId = params.get("roomId");
@@ -29,7 +27,6 @@ const SuccessPage = () => {
       const checkOut = params.get("checkOut");
       const totalPrice = params.get("totalPrice");
 
-      // Validate parameters
       if (!roomId || !userId || !checkIn || !checkOut || !totalPrice) {
         setError("Missing booking details");
         setTimeout(() => navigate("/bookings"), 3000);
@@ -37,41 +34,36 @@ const SuccessPage = () => {
       }
 
       try {
-        // Update status for booking attempt
         setStatus(prev => ({
           ...prev,
           booking: { status: 'processing', message: 'Processing your booking...' }
         }));
 
-        // Modified booking request - status should match your Mongoose enum values
         const bookingResponse = await API.post("/api/payments/confirm-booking", {
           roomId,
           userId,
           checkIn: new Date(checkIn).toISOString(),
           checkOut: new Date(checkOut).toISOString(),
           totalPrice: Number(totalPrice),
-          status: 'booked'  // Changed this line from 'confirmed' to 'booked'
+          status: 'booked'
         });
 
-        // Check booking response
         if (!bookingResponse.data || bookingResponse.data.error) {
           throw new Error(bookingResponse.data?.error || 'Booking failed');
         }
 
-        // Update booking status to success
         setStatus(prev => ({
           ...prev,
-          booking: { status: 'success', message: 'Room booked successfully!' }  // Updated message
+          booking: { status: 'success', message: 'Room booked successfully!' }
         }));
 
-        // Handle email confirmation
         try {
           setStatus(prev => ({
             ...prev,
             email: { status: 'processing', message: 'Sending confirmation email...' }
           }));
 
-          const userResponse = await API.get(`/api/users/${userId}`);
+          const userResponse = await API.get(`/api/rooms/users/${userId}`);
           
           if (userResponse.data?.email) {
             await API.post("/api/auth/send-booking-email", {
@@ -100,31 +92,27 @@ const SuccessPage = () => {
           }));
         }
 
-        // Redirect to bookings page after successful booking
         setTimeout(() => navigate("/bookings"), 3000);
 
       } catch (error) {
         console.error("Booking error:", error);
         
-        // Check if error is due to duplicate booking
         if (error.response?.data?.error?.includes('already booked')) {
           setError("This room is already booked for these dates");
         } else {
           setError(error.response?.data?.error || error.message || "Booking failed");
         }
         
-        // Redirect after error
         setTimeout(() => navigate("/bookings"), 3000);
       }
     };
 
     confirmBooking();
-  }, [location, navigate, bookingAttempted]); // Add bookingAttempted to dependencies
+  }, [location, navigate, bookingAttempted]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           {error ? (
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
@@ -148,10 +136,8 @@ const SuccessPage = () => {
           </p>
         </div>
 
-        {/* Status Steps */}
         {!error && (
           <div className="space-y-4">
-            {/* Booking Status */}
             <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
               <div className={`flex-shrink-0 ${
                 status.booking.status === 'processing' ? 'animate-spin' : ''
@@ -169,7 +155,6 @@ const SuccessPage = () => {
               )}
             </div>
 
-            {/* Email Status */}
             <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
               <div className={`flex-shrink-0 ${
                 status.email.status === 'processing' ? 'animate-spin' : ''
@@ -189,14 +174,12 @@ const SuccessPage = () => {
           </div>
         )}
 
-        {/* Error Message */}
         {error && (
           <div className="mt-6 p-4 bg-red-50 rounded-lg">
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
 
-        {/* Success Navigation */}
         {status.booking.status === 'success' && status.email.status === 'success' && (
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500 mb-4">

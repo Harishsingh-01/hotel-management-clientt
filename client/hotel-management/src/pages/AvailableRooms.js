@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import roomImage from "./download.jpg";
 import { Hotel, DollarSign, Eye, Calendar, Check, Search } from "lucide-react";
-import API from "../utils/axiosInstance"; // Import the axios instance
+import API from "../utils/axiosInstance";
 
 
 const AvailableRooms = () => {
@@ -72,11 +71,14 @@ const AvailableRooms = () => {
                   className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   {/* Room Image */}
-                  <div className="relative">
+                  <div className="relative overflow-hidden rounded-t-lg">
                     <img
-                      src={roomImage}
+                      src={room.mainImage}
                       alt={room.name}
-                      className="w-full h-56 object-cover"
+                      className="w-full h-56 object-cover transform hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
+                      }}
                     />
                     <div className="absolute top-4 right-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
@@ -94,9 +96,9 @@ const AvailableRooms = () => {
                         <p className="text-sm text-gray-500">ID: {room._id}</p>
                       </div>
                       <div className="flex items-center text-green-600">
-                        <DollarSign className="h-5 w-5 mr-1" />
+                      <span className="h-5 w-5 mr-1">₹</span>
                         <span className="text-xl font-bold">₹{room.price}</span>
-                        <span className="text-sm text-gray-500 ml-1">/night</span>
+                        <span className="text-sm text-gray-500 ml-1">/Month</span>
                       </div>
                     </div>
 
@@ -117,18 +119,18 @@ const AvailableRooms = () => {
                     )}
 
                     {/* View Details Button */}
-              <Link
-                to={`/room/${room._id}`}
+                    <Link
+                      to={`/room/${room._id}`}
                       className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
-              >
+                    >
                       <Eye className="w-4 h-4 mr-2" />
-                View Details
-              </Link>
+                      View Details
+                    </Link>
                   </div>
                 </div>
-          ))}
+              ))}
             </div>
-      )}
+          )}
         </div>
       </div>
     </div>

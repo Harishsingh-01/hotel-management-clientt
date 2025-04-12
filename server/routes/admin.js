@@ -10,17 +10,31 @@ const router = express.Router();
 
 // ✅ create a rooms (Admin)
 router.post("/addrooms", verifyToken, adminMiddleware, async (req, res) => {
-  
-
     try {
- 
-        const newRoom = new Room(req.body);
-        await newRoom.save();
+        // Validate main image
+        if (!req.body.mainImage) {
+            return res.status(400).json({ message: "Main image URL is required" });
+        }
 
+        // Validate additional images (optional)
+        if (req.body.additionalImages && Array.isArray(req.body.additionalImages)) {
+            if (req.body.additionalImages.length > 3) {
+                return res.status(400).json({ 
+                    message: "Maximum 3 additional images allowed" 
+                });
+            }
+        }
+
+        const newRoom = new Room({
+            ...req.body,
+            additionalImages: (req.body.additionalImages || []).filter(Boolean)
+        });
+
+        await newRoom.save();
         res.status(201).json({ message: "Room added successfully", room: newRoom });
     } catch (error) {
         console.error("❌ Error adding room:", error);
-        res.status(500).json({ message: "Error adding room", error });
+        res.status(500).json({ message: "Error adding room", error: error.message });
     }
 });
 
@@ -29,19 +43,17 @@ router.post("/addrooms", verifyToken, adminMiddleware, async (req, res) => {
 // ✅ Update Room Details (Only for Admins)
 router.put("/update/:roomId", verifyToken, adminMiddleware, async (req, res) => {
   try {
-     
+    const updatedRoom = await Room.findByIdAndUpdate(
+      req.params.roomId,
+      req.body,
+      { new: true }
+    );
 
-      const updatedRoom = await Room.findByIdAndUpdate(
-          req.params.roomId,
-          req.body,
-          { new: true } // Returns updated document
-      );
+    if (!updatedRoom) {
+        return res.status(404).json({ message: "Room not found" });
+    }
 
-      if (!updatedRoom) {
-          return res.status(404).json({ message: "Room not found" });
-      }
-
-      res.json({ message: "Room updated successfully", room: updatedRoom });
+    res.json({ message: "Room updated successfully", room: updatedRoom });
   } catch (error) {
       console.error("Error updating room:", error);
       res.status(500).json({ message: "Internal Server Error", error });
@@ -49,18 +61,27 @@ router.put("/update/:roomId", verifyToken, adminMiddleware, async (req, res) => 
 });
 
 
-// DELETE Room Route
+// DELETE Room Route with booking cleanup
 router.delete("/delete/:roomId", verifyToken, adminMiddleware, async (req, res) => {
   try {
     const { roomId } = req.params;
+
+    // First, delete all bookings associated with this room
+    await Booking.deleteMany({ roomId: roomId });
+
+    // Then delete the room
     const deletedRoom = await Room.findByIdAndDelete(roomId);
 
     if (!deletedRoom) {
       return res.status(404).json({ message: "Room not found" });
     }
 
-    res.json({ message: "Room deleted successfully" });
+    res.json({ 
+      message: "Room and associated bookings deleted successfully",
+      deletedRoom
+    });
   } catch (error) {
+    console.error("Error deleting room:", error);
     res.status(500).json({ message: "Error deleting room", error });
   }
 });

@@ -1,18 +1,17 @@
 const express = require("express");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const Room = require("../models/Room");
-const Booking = require("../models/Booking"); // Import Booking model
+const Booking = require("../models/Booking");
 const router = express.Router();
-const mongoose = require("mongoose"); // Import Mongoose for transactions
+const mongoose = require("mongoose");
 
-// Helper function to handle retries
 const executeWithRetry = async (operation, maxRetries = 3) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
-      if (error.code === 112 && attempt < maxRetries) { // WriteConflict error
-        await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Exponential backoff
+      if (error.code === 112 && attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 100 * attempt));
         continue;
       }
       throw error;
@@ -20,7 +19,6 @@ const executeWithRetry = async (operation, maxRetries = 3) => {
   }
 };
 
-// Step 1: Create Checkout Session & Handle Payment
 router.post("/create-checkout-session", async (req, res) => {
   try {
     const { price, roomId, userId, checkIn, checkOut } = req.body;
@@ -36,7 +34,7 @@ router.post("/create-checkout-session", async (req, res) => {
           price_data: {
             currency: "inr",
             product_data: { name: "Hotel Room Booking" },
-            unit_amount: price * 100, // Convert INR to paise
+            unit_amount: price * 100,
           },
           quantity: 1,
         },
@@ -45,7 +43,6 @@ router.post("/create-checkout-session", async (req, res) => {
       success_url: `https://hotel-management-clientt-git-main-harishsingh-01s-projects.vercel.app/success?roomId=${roomId}&userId=${userId}&checkIn=${checkIn}&checkOut=${checkOut}&totalPrice=${price}`,
     });
      
-
     res.json({ sessionId: session.id });
   } catch (error) {
     console.error("Stripe Error:", error);
@@ -53,19 +50,16 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 });
 
-// Step 2: Confirm Booking After Payment Success
 router.post("/confirm-booking", async (req, res) => {
   let session = null;
 
   try {
     const { roomId, userId, checkIn, checkOut, totalPrice } = req.body;
 
-    // Validate input
     if (!roomId || !userId || !checkIn || !checkOut || !totalPrice) {
       return res.status(400).json({ error: "Missing booking details" });
     }
 
-    // Check for existing bookings without transaction
     const existingBooking = await Booking.findOne({
       roomId,
       $or: [
@@ -81,13 +75,11 @@ router.post("/confirm-booking", async (req, res) => {
       return res.status(400).json({ error: "Room is already booked for these dates" });
     }
 
-    // Check room availability
     const room = await Room.findById(roomId);
     if (!room || !room.available) {
       return res.status(400).json({ error: "Room is not available" });
     }
 
-    // Create booking
     const booking = new Booking({
       userId,
       roomId,
@@ -97,10 +89,8 @@ router.post("/confirm-booking", async (req, res) => {
       status: 'booked'
     });
 
-    // Save booking
     await booking.save();
 
-    // Update room availability
     room.available = false;
     await room.save();
 
@@ -113,7 +103,6 @@ router.post("/confirm-booking", async (req, res) => {
   } catch (error) {
     console.error("Booking Error:", error);
 
-    // If session exists, abort transaction
     if (session) {
       try {
         await session.abortTransaction();
@@ -123,14 +112,12 @@ router.post("/confirm-booking", async (req, res) => {
       }
     }
 
-    // Handle specific error cases
     if (error.code === 251) {
       return res.status(500).json({
         error: "Booking system temporarily unavailable. Please try again."
       });
     }
 
-    // Handle duplicate booking error
     if (error.code === 11000) {
       return res.status(400).json({
         error: "This room is already booked for the selected dates"
@@ -142,7 +129,6 @@ router.post("/confirm-booking", async (req, res) => {
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   } finally {
-    // Ensure session is ended if it exists
     if (session) {
       try {
         session.endSession();
@@ -152,6 +138,5 @@ router.post("/confirm-booking", async (req, res) => {
     }
   }
 });
-
 
 module.exports = router;

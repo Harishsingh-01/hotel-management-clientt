@@ -1,36 +1,33 @@
-import { jwtDecode } from 'jwt-decode';  // Named import for jwtDecode
+import { jwtDecode } from 'jwt-decode';
 
-// Check if user is authenticated and also check for the role if provided
 export const isAuthenticated = (role) => {
   const token = localStorage.getItem("token");
   if (token) {
     const decodedToken = jwtDecode(token);
     if (role) {
-      // If role is provided, return true if the role matches
       return decodedToken?.role === role;
     }
-    return true; // Return true if the user is authenticated without checking role
+    return true;
   }
-  return false; // Return false if no token
+  return false;
 };
 
-// Logout function to clear the token and redirect
 export const logout = () => {
   localStorage.removeItem("token");
-  window.location.href = "/login"; // Redirect to login after logout
+  window.location.href = "/login";
 };
 
 export const isTokenExpired = () => {
   const token = localStorage.getItem("token");
-  if (!token) return true; // Agar token hi nahi hai toh expire maana jayega
+  if (!token) return true;
 
   try {
       const decoded = jwtDecode(token);
       if (decoded.exp * 1000 < Date.now()) {
-          return true; // Token expire ho chuka hai
+          return true;
       }
       return false;
   } catch (error) {
-      return true; // Agar token invalid hai toh bhi expire maana jayega
+      return true;
   }
 };

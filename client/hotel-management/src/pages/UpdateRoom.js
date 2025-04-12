@@ -16,9 +16,10 @@ const UpdateRoom = () => {
     const fetchRoomDetails = async () => {
       try {
         const token = localStorage.getItem("token");
+
  
         const response = await API.get(`/api/rooms/${roomId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `${token}` },
         });
 
  
@@ -73,7 +74,8 @@ const UpdateRoom = () => {
           ? room.amenities.split(',').map(item => item.trim()).filter(Boolean)
           : room.amenities,
         description: room.description || "",
-        image: room.imageUrl || "", // Match the backend field name
+        mainImage: room.mainImage, // Main image URL
+        additionalImages: room.additionalImages.filter(Boolean), // Remove empty strings
         available: Boolean(room.available)
       };
 
@@ -82,7 +84,7 @@ const UpdateRoom = () => {
         updatedData,
         {
           headers: { 
-            Authorization: `Bearer ${token}`,
+            Authorization: `${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -238,21 +240,50 @@ const UpdateRoom = () => {
               </div>
             </div>
 
-            {/* Image URL */}
+            {/* Main Image Input */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Image URL</label>
+              <label className="block text-sm font-medium text-gray-700">Main Image URL (Required)</label>
               <div className="relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Image className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  name="imageUrl"
-                  value={room.imageUrl || ""}
+                  name="mainImage"
+                  value={room.mainImage || ''}
                   onChange={handleChange}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
-                  placeholder="https://example.com/room-image.jpg"
+                  placeholder="Main image URL"
+                  required
                 />
+              </div>
+            </div>
+
+            {/* Additional Images */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Additional Images (Optional)</label>
+              <div className="space-y-2">
+                {[0, 1, 2].map((index) => (
+                  <div key={index} className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Image className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={room.additionalImages?.[index] || ''}
+                      onChange={(e) => {
+                        const newImages = [...(room.additionalImages || [])];
+                        newImages[index] = e.target.value;
+                        setRoom(prev => ({
+                          ...prev,
+                          additionalImages: newImages
+                        }));
+                      }}
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                      placeholder={`Additional image URL ${index + 1}`}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 

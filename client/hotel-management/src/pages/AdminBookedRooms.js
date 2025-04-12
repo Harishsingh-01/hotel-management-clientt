@@ -78,7 +78,7 @@ const AdminBookedRooms = () => {
                   {/* Room Image */}
                   <div className="relative">
                     <img
-                      src={roomImage}
+                      src={room.imageUrl}
                       alt={room.name}
                       className="w-full h-48 object-cover"
                     />
@@ -94,7 +94,7 @@ const AdminBookedRooms = () => {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">{room.name}</h3>
                       <div className="flex items-center text-green-600">
-                        <DollarSign className="h-5 w-5 mr-1" />
+                      <span className="h-5 w-5 mr-1">₹</span>
                         <span className="font-bold">₹{room.price}</span>
                       </div>
                     </div>

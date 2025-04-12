@@ -6,11 +6,9 @@ const cors = require("cors");
 dotenv.config();
 const app = express();
 
-
-
 const allowedOrigins = [
   "https://hotel-management-clientt-git-main-harishsingh-01s-projects.vercel.app",
-  "https://hotel-management-clientt-neon.vercel.app", // Add any other deployed frontend URLs
+  "https://hotel-management-clientt-neon.vercel.app",
   "https://hotel-management-clientt-harishsingh-01s-projects.vercel.app",
 ];
 
@@ -22,12 +20,10 @@ app.use(cors({
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Allow credentials like cookies
-  methods: "GET,POST,PUT,DELETE", // Allow specific HTTP methods
-  allowedHeaders: "Content-Type,Authorization", // Allow specific headers
+  credentials: true,
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
 }));
-
-// Middleware
 
 app.use(express.json());
 app.use((req, res, next) => {
@@ -35,34 +31,29 @@ app.use((req, res, next) => {
 });
 
 const roomRoutes = require("./routes/roomRoutes");
-app.use("/api/", roomRoutes);
+app.use("/api/rooms", roomRoutes);
   
 const bookingRoutes = require("./routes/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
 
-
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 
-const paymentRoutes = require("./routes/paymentRoutes"); // ✅ Add payment route
-app.use("/api/payments", paymentRoutes); // ✅ Define payment route
-
+const paymentRoutes = require("./routes/paymentRoutes"); 
+app.use("/api/payments", paymentRoutes); 
 
 const AdminRoute = require("./routes/admin");
 app.use("/api/admin", AdminRoute);
 
+const reviewRoutes = require("./routes/reviews");
+app.use("/api/reviews", reviewRoutes);
 
+const contactRoutes = require('./routes/contactRoutes');
+app.use('/api/contact', contactRoutes);
 
-
-
-
-
-
-// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log("❌ MongoDB Error:", err));
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

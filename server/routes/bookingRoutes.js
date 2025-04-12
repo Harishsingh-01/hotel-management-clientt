@@ -49,11 +49,11 @@ const router = express.Router();
 // });
 
 
+
 // 📌 Get all bookings for a logged-in user (Protected Route)
   router.get("/userbookings", verifyToken, async (req, res) => {
- 
+
     try {
-      
       const userId = req.user?.id; // Ensure userId is extracted correctly
 
       
@@ -126,5 +126,22 @@ const router = express.Router();
 // });
 
 
+// Add this new route to get a single booking
+router.get('/:bookingId', verifyToken, async (req, res) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.bookingId,
+      userId: req.user.id
+    }).populate('roomId');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching booking details', error: error.message });
+  }
+});
 
 module.exports = router;
